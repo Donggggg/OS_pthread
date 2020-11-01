@@ -18,11 +18,12 @@ void *Reader(void* arg)
 	r_lock(&rwlock);
 
 	pthread_spin_lock(&spinlock);
+//	fprintf(stderr,"Reader: %d has acquired the lock\n", threadNUmber);
 	readerAcquireTime[threadNUmber] = indx;
 	indx++;
 	pthread_spin_unlock(&spinlock);
 
-	// printf("Reader: %d has acquired the lock\n", threadNUmber);
+	//fprintf(stderr,"Reader: %d has acquired the lock\n", threadNUmber);
 	usleep(10000);
 
 	pthread_spin_lock(&spinlock);
@@ -32,23 +33,24 @@ void *Reader(void* arg)
 
 	// Releasing the Lock
 	r_unlock(&rwlock);
-	// printf("Reader: %d has released the lock\n",threadNUmber);
+//	fprintf(stderr,"Reader: %d has released the lock\n",threadNUmber);
 }
 
 void *Writer(void* arg)
 {
 	int threadNUmber = *((int *)arg);
 
-  // Occupying the Lock
+	// Occupying the Lock
 	w_lock(&rwlock);
 
 	pthread_spin_lock(&spinlock);
+//	fprintf(stderr,"Writer: %d has acquired the lock\n",threadNUmber);
 	writerAcquireTime[threadNUmber] = indx;
 	indx++;
 	pthread_spin_unlock(&spinlock);
 
-	// printf("Writer: %d has acquired the lock\n",threadNUmber);
-  usleep(10000);
+//	fprintf(stderr,"Writer: %d has acquired the lock\n",threadNUmber);
+	usleep(10000);
 
 	pthread_spin_lock(&spinlock);
 	writerReleaseTime[threadNUmber] = indx;
@@ -57,7 +59,7 @@ void *Writer(void* arg)
 
 	// Releasing the Lock
 	w_unlock(&rwlock);
-	// printf("Writer: %d has released the lock\n",threadNUmber);
+//	fprintf(stderr,"Writer: %d has released the lock\n",threadNUmber);
 }
 
 int main(int argc, char *argv[])
@@ -96,9 +98,9 @@ int main(int argc, char *argv[])
 		*arg = i;
 		int ret = pthread_create(threads+count, NULL, Reader, (void*) arg);
 		if(ret){
-        printf("Error - pthread_create() return code: %d\n",ret);
-        exit(EXIT_FAILURE);
-    }
+			printf("Error - pthread_create() return code: %d\n",ret);
+			exit(EXIT_FAILURE);
+		}
 		count++;
 	}
 
@@ -112,10 +114,10 @@ int main(int argc, char *argv[])
 		*arg = i;
 		int ret = pthread_create(threads+count, NULL, Writer,( void*) arg);
 		if(ret)
-    {
-        printf("Error - pthread_create() return code: %d\n",ret);
-        exit(EXIT_FAILURE);
-    }
+		{
+			printf("Error - pthread_create() return code: %d\n",ret);
+			exit(EXIT_FAILURE);
+		}
 		count++;
 	}
 
@@ -130,10 +132,10 @@ int main(int argc, char *argv[])
 		*arg = read_num_threads + i;
 		int ret = pthread_create(threads+count,NULL,Reader,(void*) arg);
 		if(ret)
-    {
-        printf("Error - pthread_create() return code: %d\n",ret);
-        exit(EXIT_FAILURE);
-    }
+		{
+			printf("Error - pthread_create() return code: %d\n",ret);
+			exit(EXIT_FAILURE);
+		}
 		count++;
 	}
 
@@ -141,11 +143,13 @@ int main(int argc, char *argv[])
 	for(int i=0;i<num_threads; i++)
 		pthread_join(threads[i],NULL);
 
-	// for(int i=0; i<read_num_threads*2; i++)
-	// 	printf("Reader %d Lock Time: %ld Unlock Time: %ld\n", i, readerAcquireTime[i], readerReleaseTime[i]);
+/*	
+	 for(int i=0; i<read_num_threads*2; i++)
+	 	fprintf(stderr,"Reader %d Lock Time: %ld Unlock Time: %ld\n", i, readerAcquireTime[i], readerReleaseTime[i]);
 
-	// for (int i = 0; i < write_num_threads; i++)
-	// 	printf("Writer %d Lock Time: %ld Unlock Time: %ld\n", i, writerAcquireTime[i], writerReleaseTime[i]);
+	 for (int i = 0; i < write_num_threads; i++)
+	 	fprintf(stderr,"Writer %d Lock Time: %ld Unlock Time: %ld\n", i, writerAcquireTime[i], writerReleaseTime[i]);
+*/		
 
 	long *max_reader_acquire_time = max_element(readerAcquireTime, readerAcquireTime + 2 * read_num_threads);
 	long *min_reader_release_time = min_element(readerReleaseTime, readerReleaseTime + 2 * read_num_threads);

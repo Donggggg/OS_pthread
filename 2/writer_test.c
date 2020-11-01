@@ -21,7 +21,7 @@ void *Reader(void* arg)
 	indx++;
 	pthread_spin_unlock(&spinlock);
 
-	// printf("Reader: %d has acquired the lock\n", threadNUmber);
+	//fprintf(stderr,"Reader: %d has acquired the lock\n", threadNUmber);
 	usleep(100000);
 
 	pthread_spin_lock(&spinlock);
@@ -31,7 +31,7 @@ void *Reader(void* arg)
 
 	// Releasing the Lock
 	r_unlock(&rwlock);
-	// printf("Reader: %d has released the lock\n",threadNUmber);
+//	fprintf(stderr,"Reader: %d has released the lock\n",threadNUmber);
 }
 
 void *Writer(void* arg)
@@ -46,7 +46,7 @@ void *Writer(void* arg)
 	indx++;
 	pthread_spin_unlock(&spinlock);
 
-	// printf("Writer: %d has acquired the lock\n",threadNUmber);
+//	fprintf(stderr,"Writer: %d has acquired the lock\n",threadNUmber);
   usleep(100000);
 
 	pthread_spin_lock(&spinlock);
@@ -56,7 +56,7 @@ void *Writer(void* arg)
 
 	// Releasing the Lock
 	w_unlock(&rwlock);
-	// printf("Writer: %d has released the lock\n",threadNUmber);
+//	fprintf(stderr,"Writer: %d has released the lock\n",threadNUmber);
 }
 
 int main(int argc, char *argv[])
@@ -144,14 +144,14 @@ int main(int argc, char *argv[])
 
 	for(int i=0;i<num_threads; i++)
 		pthread_join(threads[i],NULL);
-
+/*
 	// TESTING SCRIPT 
-	// for(int i=0; i<read_num_threads*2; i++)
-	// 	printf("Reader %d Lock Time: %ld Unlock Time: %ld\n", i, readerAcquireTime[i], readerReleaseTime[i]);
+	 for(int i=0; i<read_num_threads*2; i++)
+	 	fprintf(stderr,"Reader %d Lock Time: %ld Unlock Time: %ld\n", i, readerAcquireTime[i], readerReleaseTime[i]);
 
-	// for (int i = 0; i < write_num_threads; i++)
-	// 	printf("Writer %d Lock Time: %ld Unlock Time: %ld\n", i, writerAcquireTime[i], writerReleaseTime[i]);
-
+	 for (int i = 0; i < write_num_threads; i++)
+	 	fprintf(stderr,"Writer %d Lock Time: %ld Unlock Time: %ld\n", i, writerAcquireTime[i], writerReleaseTime[i]);
+*/
 	long *max_reader_acquire_time_first_half = max_element(readerAcquireTime, readerAcquireTime + read_num_threads);
 	long *min_reader_release_time_first_half = min_element(readerReleaseTime, readerReleaseTime + read_num_threads);
 	long *max_reader_release_time_first_half = max_element(readerReleaseTime, readerReleaseTime + read_num_threads);

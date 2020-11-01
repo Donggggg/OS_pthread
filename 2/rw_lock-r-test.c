@@ -2,25 +2,53 @@
 
 void init_rwlock(struct rw_lock * rw)
 {
-  //	Write the code for initializing your read-write lock.
+	rw->r_lock_num = 0;
+	rw->w_lock_num = 0;
+
+	rw->r_lock_valid = 1;
+	rw->w_lock_valid = 0;
+
+	pthread_mutex_init(&rw->w_mutex, NULL);
 }
 
 void r_lock(struct rw_lock * rw)
 {
-  //	Write the code for aquiring read-write lock by the reader.
+	rw->r_lock_num++;
+
+	while(rw->r_lock_valid != 1);
+
+	rw->r_lock_valid = 1;
+	rw->w_lock_valid = 0;
 }
+
 
 void r_unlock(struct rw_lock * rw)
 {
-  //	Write the code for releasing read-write lock by the reader.
+	rw->r_lock_num--;
+
+	if(rw->r_lock_num == 0){
+		rw->r_lock_valid = 1;
+		rw->w_lock_valid = 1;
+	}
 }
 
 void w_lock(struct rw_lock * rw)
 {
-  //	Write the code for aquiring read-write lock by the writer.
+	usleep(100);
+	while(rw->r_lock_num != 0);
+
+	pthread_mutex_lock(&rw->w_mutex);
+
+	while(rw->w_lock_valid != 1);
+
+	rw->r_lock_valid = 0;
+	rw->w_lock_valid = 0;
 }
 
 void w_unlock(struct rw_lock * rw)
 {
-  //	Write the code for releasing read-write lock by the writer.
+	rw->r_lock_valid = 1;
+	rw->w_lock_valid = 1;
+
+	pthread_mutex_unlock(&rw->w_mutex);
 }

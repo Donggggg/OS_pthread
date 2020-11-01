@@ -5,7 +5,13 @@
 
 struct rw_lock
 {
+	int r_lock_num;
+	int w_lock_num;
+	int r_lock_valid;
+	int w_lock_valid;
 
+	pthread_mutex_t r_mutex;
+	pthread_mutex_t w_mutex;
 };
 
 void init_rwlock(struct rw_lock * rw);

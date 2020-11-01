@@ -99,8 +99,6 @@ int main(int argc, char *argv[])
 	item_to_produce = 0;
 	item_to_consume = 0;
 	curr_buf_size = 0;
-	debug_item1=0;
-	debug_item2=0;
 
 	int i;
 
