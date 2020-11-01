@@ -23,7 +23,6 @@ void *justprint(void *data)
 	{
 		SSU_Sem_down(&semas[thread_id]);
 		printf("This is thread %d\n", thread_id);
-		SSU_Sem_up(&semas[(thread_id+1)%3]);
 	}
 
 	return 0;
@@ -42,7 +41,11 @@ int main(int argc, char *argv[])
 		pthread_create(&mythreads[i], NULL, justprint, (void *)&mythread_id[i]);
 	}
 
-	SSU_Sem_up(&semas[0]);
+	usleep(1000);
+	for(int i = 0; i <NUM_ITER * NUM_THREADS; i++){
+		printf("SS\n");
+		SSU_Sem_up(&semas[i%3]);
+	}
 
 	for(int i =0; i < NUM_THREADS; i++)
 	{
