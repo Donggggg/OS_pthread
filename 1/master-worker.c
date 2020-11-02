@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
@@ -7,23 +8,21 @@
 #include <wait.h>
 #include <pthread.h>
 
-int item_to_produce, item_to_consume, curr_buf_size;
+int item_to_produce, item_to_consume, curr_buf_size, cur_items;
 int total_items, max_buf_size, num_workers, num_masters;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-//int debug_item1, debug_item2;
+pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond2 = PTHREAD_COND_INITIALIZER;
 
 int *buffer;
 
 void print_produced(int num, int master) {
-
 	printf("Produced %d by master %d\n", num, master);
 }
 
 void print_consumed(int num, int worker) {
-
 	printf("Consumed %d by worker %d\n", num, worker);
-
 }
 
 //produce items and place in buffer
@@ -38,27 +37,25 @@ void *generate_requests_loop(void *data)
 		pthread_mutex_lock(&mutex);
 
 		if(item_to_produce >= total_items) {
+			pthread_cond_signal(&cond);
 			pthread_mutex_unlock(&mutex);
 			break;
 		}
 
-		if(curr_buf_size >= max_buf_size) {
-			for(i = 0; i < max_buf_size; i++) {
-				if(buffer[i] == -1) {
-					buffer[i] = item_to_produce;
-					print_produced(item_to_produce, thread_id);
-					item_to_produce++;
-	//				debug_item2++;
-					break;
-				}
+		for(i = 0; i < max_buf_size; i++) 
+		{
+			if(buffer[i] == -1) {
+				buffer[i] = item_to_produce;
+				print_produced(item_to_produce, thread_id);
+				item_to_produce++;
+				cur_items++;
+				break;
 			}
 		}
-		else {
-			buffer[curr_buf_size++] = item_to_produce;
-			print_produced(item_to_produce, thread_id);
-			item_to_produce++;
-	//		debug_item1++;
-		}
+
+		pthread_cond_signal(&cond);
+		if(num_masters != 1)
+			pthread_cond_wait(&cond, &mutex);
 		pthread_mutex_unlock(&mutex);
 	}
 	return 0;
@@ -73,10 +70,11 @@ void *generate_responds_loop(void * data)
 
 	while(1)
 	{
-		pthread_mutex_lock(&mutex);
+		pthread_mutex_lock(&mutex2);
 
 		if(item_to_consume >= total_items) {
-			pthread_mutex_unlock(&mutex);
+			pthread_cond_signal(&cond2);
+			pthread_mutex_unlock(&mutex2);
 			break;
 		}
 
@@ -85,10 +83,14 @@ void *generate_responds_loop(void * data)
 				print_consumed(buffer[i], thread_id);
 				buffer[i] = -1;
 				item_to_consume++;
+				cur_items--;
 				break;
 			}
 		}
-		pthread_mutex_unlock(&mutex);
+		pthread_cond_signal(&cond2);
+		if(num_workers != 1)
+			pthread_cond_wait(&cond2, &mutex2);
+		pthread_mutex_unlock(&mutex2);
 	}
 }
 
@@ -99,6 +101,7 @@ int main(int argc, char *argv[])
 	item_to_produce = 0;
 	item_to_consume = 0;
 	curr_buf_size = 0;
+	cur_items = 0;
 
 	int i;
 
@@ -126,6 +129,7 @@ int main(int argc, char *argv[])
 
 	for (i = 0; i < num_masters; i++)
 		pthread_create(&master_thread[i], NULL, generate_requests_loop, (void *)&master_thread_id[i]);
+
 	//create worker consumer threads (워커쓰레드 생성 해라!)
 	worker_thread_id = (int *)malloc(sizeof(int) * num_workers);
 	worker_thread = (pthread_t *)malloc(sizeof(pthread_t) * num_workers);
@@ -148,7 +152,8 @@ int main(int argc, char *argv[])
 	}
 
 	pthread_mutex_destroy(&mutex);
-//	fprintf(stderr, "%d %d\n", debug_item1, debug_item2);
+	pthread_mutex_destroy(&mutex2);
+	pthread_cond_destroy(&cond);
 
 	/*----Deallocating Buffers---------------------*/
 	free(buffer);
