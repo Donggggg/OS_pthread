@@ -13,7 +13,6 @@
 #define NUM_ITER 10
 
 SSU_Sem semas[NUM_THREADS];
-SSU_Sem *cur;
 
 void *justprint(void *data)
 {

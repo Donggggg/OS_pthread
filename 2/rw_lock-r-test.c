@@ -34,7 +34,8 @@ void r_unlock(struct rw_lock * rw)
 
 void w_lock(struct rw_lock * rw)
 {
-	usleep(100);
+	usleep(300);
+
 	while(rw->r_lock_num != 0);
 
 	pthread_mutex_lock(&rw->w_mutex);
