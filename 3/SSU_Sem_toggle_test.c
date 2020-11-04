@@ -12,17 +12,20 @@
 #define NUM_THREADS 3
 #define NUM_ITER 10
 
-SSU_Sem semas[NUM_THREADS];
+SSU_Sem sema1;
+SSU_Sem sema2;
 
 void *justprint(void *data)
 {
 	int thread_id = *((int *)data);
 
+	SSU_Sem_up(&sema2);
+
 	for(int i=0; i < NUM_ITER; i++)
 	{
-		SSU_Sem_down(&semas[thread_id]);
+		SSU_Sem_down(&sema1);
 		printf("This is thread %d\n", thread_id);
-		SSU_Sem_up(&semas[(thread_id+1)%3]);
+		SSU_Sem_up(&sema2);
 	}
 
 	return 0;
@@ -33,15 +36,20 @@ int main(int argc, char *argv[])
 
 	pthread_t mythreads[NUM_THREADS];
 	int mythread_id[NUM_THREADS];
+	SSU_Sem_init(&sema1, 0);
+	SSU_Sem_init(&sema2, 0);
 
 	for(int i =0; i < NUM_THREADS; i++)
 	{
-		SSU_Sem_init(&semas[i], 0);
 		mythread_id[i] = i;
 		pthread_create(&mythreads[i], NULL, justprint, (void *)&mythread_id[i]);
+		SSU_Sem_down(&sema2);
 	}
 
-	SSU_Sem_up(&semas[0]);
+	for(int i = 0; i < NUM_THREADS * NUM_ITER; i++){
+		SSU_Sem_up(&sema1);
+		SSU_Sem_down(&sema2);
+	}
 
 	for(int i =0; i < NUM_THREADS; i++)
 	{

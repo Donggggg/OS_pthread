@@ -2,8 +2,8 @@
 
 typedef struct SSU_Sem {
 	int sem;
-	int block;
 	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 } SSU_Sem;
 
 void SSU_Sem_init(SSU_Sem *, int);
